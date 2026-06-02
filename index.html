@@ -77,11 +77,6 @@
             </label>
           </div>
 
-          <label class="field">
-            <span>AI image key</span>
-            <input id="imageKeyInput" type="password" placeholder="Pollinations publishable key, pk_..." autocomplete="off" />
-          </label>
-
           <label class="toggle-row" id="inscriptionToggleRow">
             <input id="inscriptionToggle" type="checkbox" checked />
             <span>
@@ -94,6 +89,32 @@
             <span aria-hidden="true">◆</span>
             Generate Chain-Native Output
           </button>
+        </section>
+
+        <!-- OpenAI API Key + Model -->
+        <section class="panel api-key-panel">
+          <div class="section-heading">
+            <span>Image Engine</span>
+            <span>OpenAI</span>
+          </div>
+
+          <div id="modelSelector" class="model-selector"></div>
+
+          <p class="api-key-description">
+            Enter your key from <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">platform.openai.com</a>.
+            Stored locally, never sent anywhere except OpenAI.
+          </p>
+          <div class="api-key-row">
+            <input
+              id="apiKeyInput"
+              type="password"
+              placeholder="sk-…"
+              autocomplete="off"
+              spellcheck="false"
+            />
+            <button id="apiKeySaveBtn" type="button" class="save-key-btn">Save</button>
+          </div>
+          <p id="apiKeyStatus" class="api-key-status" data-ok="false">No key — generative SVG placeholder will be used</p>
         </section>
       </aside>
 
@@ -110,6 +131,19 @@
           </div>
         </header>
 
+        <!-- AI Interpretation Panel -->
+        <section class="ai-panel" id="aiPanel" data-status="idle" aria-label="AI chain interpretation">
+          <div class="ai-panel-header">
+            <div class="ai-label">
+              <span class="ai-dot" aria-hidden="true"></span>
+              <span id="aiStatus">AI interpretation layer ready</span>
+            </div>
+            <span id="aiTitleDisplay" class="ai-title-display"></span>
+          </div>
+          <p id="aiReasoning" class="ai-reasoning"></p>
+          <div id="aiSpecs" class="ai-specs-row"></div>
+        </section>
+
         <div class="preview-layout">
           <section class="preview-stage" aria-label="Artwork preview">
             <div class="preview-toolbar">
@@ -117,6 +151,8 @@
               <span id="sizeBadge">~8 KB target</span>
               <span id="supplyBadge">single edition</span>
             </div>
+            <!-- Image generation status bar -->
+            <div class="image-status-bar" id="imageStatus" data-status="idle"></div>
             <div class="art-frame" id="artFrame"></div>
           </section>
 
