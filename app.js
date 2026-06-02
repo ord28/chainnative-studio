@@ -123,6 +123,7 @@ const elements = {
   formatInput: $("formatInput"),
   seedInput: $("seedInput"),
   qualityInput: $("qualityInput"),
+  imageKeyInput: $("imageKeyInput"),
   inscriptionToggle: $("inscriptionToggle"),
   inscriptionToggleRow: $("inscriptionToggleRow"),
   generateBtn: $("generateBtn"),
@@ -270,7 +271,69 @@ body{animation:drift 5s infinite}
 </style></head><body>${svg}</body></html>`.trim();
 }
 
-function createMetadata({ profile, prompt, supply, format, quality, optimize, traits, seed }) {
+function createAiPrompt({ profile, prompt, supply, format, quality, optimize, traits }) {
+  const traitLanguage = traits.map((trait) => `${trait.trait_type}: ${trait.value}`).join(", ");
+  const shared = [
+    prompt,
+    "original AI generated artwork",
+    "no logo, no watermark, no text, no frame",
+    "square composition, high visual impact",
+    `selected output format: ${format}`,
+    `quality mode: ${quality}`,
+    `traits: ${traitLanguage}`,
+  ];
+
+  if (profile.label.startsWith("BTC")) {
+    shared.push(
+      "Bitcoin Ordinals culture",
+      "experimental collector artifact",
+      "scarcity driven conceptual art",
+      optimize
+        ? "minimal but beautiful, inscription efficient, crisp vector-like shapes, limited palette"
+        : "experimental on-chain art aesthetic, luminous details, self-contained digital artifact",
+    );
+  } else if (profile.label.startsWith("ETH")) {
+    shared.push(
+      "Ethereum NFT culture",
+      "premium marketplace-ready art",
+      "cinematic lighting, polished rendering, rich details, collectible 1 of 1 gallery quality",
+    );
+  } else {
+    shared.push(
+      "Solana NFT culture",
+      "clean vibrant generative collection style",
+      "bold readable silhouette, modern PFP energy, fast-moving community drop aesthetic",
+    );
+  }
+
+  if (supply > 1) {
+    shared.push("consistent collection style, rarity traits visible through costume, color, and background variation");
+  }
+
+  return shared.join(", ");
+}
+
+function createAiImageUrl(aiPrompt, seed, size = 1024, key = "") {
+  const params = new URLSearchParams({
+    width: String(size),
+    height: String(size),
+    seed: String(hashString(seed)),
+    nologo: "true",
+    enhance: "true",
+    model: "zimage",
+  });
+  if (key) params.set("key", key);
+  return `https://gen.pollinations.ai/image/${encodeURIComponent(aiPrompt)}?${params.toString()}`;
+}
+
+function stripKeyFromUrl(url) {
+  const cleanUrl = new URL(url);
+  cleanUrl.searchParams.delete("key");
+  return cleanUrl.toString();
+}
+
+function createMetadata({ profile, prompt, supply, format, quality, optimize, traits, seed, aiPrompt, aiImageUrl }) {
+  const publicImageUrl = stripKeyFromUrl(aiImageUrl);
   const base = {
     name: `${profile.label} - ${promptKeywords(prompt).slice(0, 3).join(" ") || "ChainNative"} #001`,
     description: `${profile.label} adaptive artwork generated from: "${prompt}".`,
@@ -278,6 +341,8 @@ function createMetadata({ profile, prompt, supply, format, quality, optimize, tr
     output_format: format,
     supply,
     generation_seed: seed,
+    ai_image_prompt: aiPrompt,
+    image: publicImageUrl,
     attributes: traits.map(({ trait_type, value }) => ({ trait_type, value })),
   };
 
@@ -295,7 +360,7 @@ function createMetadata({ profile, prompt, supply, format, quality, optimize, tr
   if (profile.label.startsWith("ETH")) {
     return {
       ...base,
-      image: "ipfs://<generated-artwork-cid>",
+      image: publicImageUrl,
       animation_url: format === "HTML" || format === "GIF" ? "ipfs://<generated-animation-cid>" : undefined,
       external_url: "https://chainnative.example/eth/drop",
       marketplace: {
@@ -308,9 +373,9 @@ function createMetadata({ profile, prompt, supply, format, quality, optimize, tr
 
   return {
     ...base,
-    image: "https://arweave.net/<generated-asset-id>",
+    image: publicImageUrl,
     properties: {
-      files: [{ uri: "https://arweave.net/<generated-asset-id>", type: `image/${format.toLowerCase()}` }],
+      files: [{ uri: publicImageUrl, type: `image/${format.toLowerCase()}` }],
       category: "image",
       creators: [{ address: "<creator-wallet>", share: 100 }],
     },
@@ -330,18 +395,34 @@ function generateOutput() {
   const quality = elements.qualityInput.value;
   const optimize = elements.inscriptionToggle.checked && state.chain === "btc";
   const seed = `${elements.seedInput.value.trim() || "chainnative"}-${state.nonce}`;
+  const imageKey = elements.imageKeyInput.value.trim();
   const random = seededRandom(hashString(`${seed}-${prompt}-${state.chain}`));
   const traits = buildTraits(profile, random, supply);
   const svg = createSvg({ profile, prompt, traits, variant: 1, format, quality, optimize, seed });
   const html = createHtmlArt(svg, profile);
-  const metadata = createMetadata({ profile, prompt, supply, format, quality, optimize, traits, seed });
+  const aiPrompt = createAiPrompt({ profile, prompt, supply, format, quality, optimize, traits });
+  const aiImageUrl = createAiImageUrl(aiPrompt, `${seed}-${state.chain}-primary`, 1024, imageKey);
+  const metadata = createMetadata({
+    profile,
+    prompt,
+    supply,
+    format,
+    quality,
+    optimize,
+    traits,
+    seed,
+    aiPrompt,
+    aiImageUrl,
+  });
   const collectionSize = supply === 1 ? 1 : Math.min(12, supply);
   const collection = Array.from({ length: collectionSize }, (_, index) => {
     const variantRandom = seededRandom(hashString(`${seed}-${index}`));
     const variantTraits = buildTraits(profile, variantRandom, supply);
+    const variantPrompt = createAiPrompt({ profile, prompt, supply, format, quality, optimize, traits: variantTraits });
     return {
       id: index + 1,
       rarity: supply === 1 ? "1/1" : `${Math.max(1, Math.round(variantRandom() * 100))}%`,
+      imageUrl: createAiImageUrl(variantPrompt, `${seed}-${state.chain}-${index + 1}`, 640, imageKey),
       svg: createSvg({
         profile,
         prompt,
@@ -365,6 +446,8 @@ function generateOutput() {
     traits,
     svg,
     html,
+    aiPrompt,
+    aiImageUrl,
     metadata,
     collection,
     decisions: profile.decisions({ format, supply, optimize }),
@@ -395,7 +478,21 @@ function renderOutput() {
   elements.raritySummary.textContent = output.supply === 1 ? "single" : "rarity weighted";
   elements.collectionCount.textContent = output.supply === 1 ? "1 generated output" : `${output.collection.length} previewed of ${output.supply}`;
 
-  if (output.format === "HTML") {
+  const shouldUseAiImage = !(state.chain === "btc" && output.optimize && (output.format === "SVG" || output.format === "HTML"));
+
+  if (shouldUseAiImage) {
+    elements.artFrame.innerHTML = `
+      <img class="ai-art" src="${output.aiImageUrl}" alt="${escapeHtml(output.prompt)}" />
+      <div class="fallback-art" aria-hidden="true">${output.svg}</div>
+    `;
+    const image = elements.artFrame.querySelector(".ai-art");
+    image.addEventListener("error", () => {
+      elements.artFrame.classList.add("show-fallback");
+    });
+    image.addEventListener("load", () => {
+      elements.artFrame.classList.remove("show-fallback");
+    });
+  } else if (output.format === "HTML") {
     elements.artFrame.innerHTML = `<iframe title="Generated HTML art preview"></iframe>`;
     elements.artFrame.querySelector("iframe").srcdoc = output.html;
   } else {
@@ -417,7 +514,7 @@ function renderOutput() {
     .map(
       (item) => `
       <article class="mini-output">
-        ${item.svg}
+        ${shouldUseAiImage ? `<img src="${item.imageUrl}" alt="Collection output ${item.id}" loading="lazy" />` : item.svg}
         <div><span>#${String(item.id).padStart(3, "0")}</span><span>${item.rarity}</span></div>
       </article>`,
     )
@@ -482,8 +579,12 @@ document.querySelectorAll(".chain-card").forEach((button) => {
   elements.seedInput,
   elements.qualityInput,
   elements.inscriptionToggle,
+  elements.imageKeyInput,
 ].forEach((control) => {
   control.addEventListener("input", () => {
+    if (control === elements.imageKeyInput) {
+      localStorage.setItem("chainnative-image-key", elements.imageKeyInput.value.trim());
+    }
     generateOutput();
     renderOutput();
   });
@@ -509,6 +610,10 @@ elements.downloadArtBtn.addEventListener("click", async () => {
     return;
   }
   if (output.format === "PNG") {
+    if (output.aiImageUrl) {
+      window.open(output.aiImageUrl, "_blank", "noopener");
+      return;
+    }
     await downloadPngFromSvg(`${chain}-chainnative-art.png`, output.svg);
     return;
   }
@@ -524,6 +629,7 @@ elements.downloadMetaBtn.addEventListener("click", () => {
   download(`${chain}-chainnative-metadata.json`, JSON.stringify(state.output.metadata, null, 2), "application/json");
 });
 
+elements.imageKeyInput.value = localStorage.getItem("chainnative-image-key") || "";
 renderFormatOptions();
 generateOutput();
 renderOutput();
