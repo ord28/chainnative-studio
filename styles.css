@@ -347,7 +347,8 @@ textarea {
 }
 
 .art-frame svg,
-.art-frame iframe {
+.art-frame iframe,
+.art-frame img {
   display: block;
   width: min(88%, 720px);
   aspect-ratio: 1;
@@ -356,8 +357,26 @@ textarea {
   box-shadow: 0 22px 70px rgba(0, 0, 0, 0.38);
 }
 
+.art-frame img {
+  height: auto;
+  object-fit: cover;
+}
+
 .art-frame iframe {
   height: auto;
+}
+
+.fallback-art {
+  display: none;
+}
+
+.art-frame.show-fallback .ai-art {
+  display: none;
+}
+
+.art-frame.show-fallback .fallback-art {
+  display: block;
+  width: min(88%, 720px);
 }
 
 .intelligence-panel {
@@ -467,11 +486,16 @@ textarea {
   overflow: hidden;
 }
 
-.mini-output svg {
+.mini-output svg,
+.mini-output img {
   display: block;
   width: 100%;
   aspect-ratio: 1;
   background: #111;
+}
+
+.mini-output img {
+  object-fit: cover;
 }
 
 .mini-output div {
