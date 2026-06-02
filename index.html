@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ChainNative Studio</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <aside class="sidebar" aria-label="Blockchain selection and generation controls">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">CN</div>
+          <div>
+            <h1>ChainNative Studio</h1>
+            <p>AI art direction tuned for blockchain culture, constraints, and export shape.</p>
+          </div>
+        </div>
+
+        <section class="panel">
+          <div class="section-heading">
+            <span>Chain</span>
+            <span id="chainFocus">BTC Ordinals</span>
+          </div>
+          <div class="chain-grid" role="radiogroup" aria-label="Select blockchain">
+            <button class="chain-card active" type="button" data-chain="btc" aria-pressed="true">
+              <span class="chain-symbol btc">BTC</span>
+              <strong>Bitcoin Ordinals</strong>
+              <small>Efficient, scarce, inscription-native</small>
+            </button>
+            <button class="chain-card" type="button" data-chain="eth" aria-pressed="false">
+              <span class="chain-symbol eth">ETH</span>
+              <strong>Ethereum NFTs</strong>
+              <small>Expressive, polished, marketplace-ready</small>
+            </button>
+            <button class="chain-card" type="button" data-chain="sol" aria-pressed="false">
+              <span class="chain-symbol sol">SOL</span>
+              <strong>Solana NFTs</strong>
+              <small>Fast, scalable, community-led drops</small>
+            </button>
+          </div>
+        </section>
+
+        <section class="panel controls-panel">
+          <label class="field">
+            <span>Art prompt</span>
+            <textarea id="promptInput" rows="5">A futuristic samurai with glowing eyes in a cyberpunk city</textarea>
+          </label>
+
+          <div class="field-row">
+            <label class="field">
+              <span>Supply</span>
+              <select id="supplyInput">
+                <option value="1">1 artwork</option>
+                <option value="100">100 collection</option>
+                <option value="1000">1000 collection</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Format</span>
+              <select id="formatInput"></select>
+            </label>
+          </div>
+
+          <div class="field-row">
+            <label class="field">
+              <span>Collection seed</span>
+              <input id="seedInput" type="text" value="cyber-samurai-001" />
+            </label>
+            <label class="field">
+              <span>Quality</span>
+              <select id="qualityInput">
+                <option value="balanced">Balanced</option>
+                <option value="premium">Premium</option>
+                <option value="compact">Compact</option>
+              </select>
+            </label>
+          </div>
+
+          <label class="toggle-row" id="inscriptionToggleRow">
+            <input id="inscriptionToggle" type="checkbox" checked />
+            <span>
+              <strong>Optimize for inscription</strong>
+              <small>Biases BTC output toward compact SVG/HTML structures and low byte weight.</small>
+            </span>
+          </label>
+
+          <button class="primary-action" id="generateBtn" type="button">
+            <span aria-hidden="true">◆</span>
+            Generate Chain-Native Output
+          </button>
+        </section>
+      </aside>
+
+      <section class="workspace" aria-label="Generated art workspace">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Adaptive AI Interpretation Layer</p>
+            <h2 id="outputTitle">BTC inscription study</h2>
+          </div>
+          <div class="topbar-actions">
+            <button class="icon-action" id="refreshBtn" type="button" title="Regenerate variation" aria-label="Regenerate variation">↻</button>
+            <button class="icon-action" id="downloadArtBtn" type="button" title="Export artwork" aria-label="Export artwork">⇩</button>
+            <button class="icon-action" id="downloadMetaBtn" type="button" title="Export metadata" aria-label="Export metadata">{ }</button>
+          </div>
+        </header>
+
+        <div class="preview-layout">
+          <section class="preview-stage" aria-label="Artwork preview">
+            <div class="preview-toolbar">
+              <span id="formatBadge">SVG</span>
+              <span id="sizeBadge">~8 KB target</span>
+              <span id="supplyBadge">single edition</span>
+            </div>
+            <div class="art-frame" id="artFrame"></div>
+          </section>
+
+          <aside class="intelligence-panel" aria-label="Chain adaptation details">
+            <div class="metric-grid">
+              <div>
+                <span>Visual Bias</span>
+                <strong id="visualBias">Vector experimental</strong>
+              </div>
+              <div>
+                <span>Technical Bias</span>
+                <strong id="technicalBias">Inscription efficiency</strong>
+              </div>
+              <div>
+                <span>Metadata</span>
+                <strong id="metadataBias">Sparse provenance</strong>
+              </div>
+              <div>
+                <span>Culture</span>
+                <strong id="cultureBias">Scarcity driven</strong>
+              </div>
+            </div>
+
+            <div class="adaptation">
+              <h3>AI Chain Decisions</h3>
+              <ul id="decisionList"></ul>
+            </div>
+
+            <div class="trait-card">
+              <div class="section-heading">
+                <span>Traits & rarity</span>
+                <span id="raritySummary">single</span>
+              </div>
+              <div id="traitList" class="trait-list"></div>
+            </div>
+          </aside>
+        </div>
+
+        <section class="collection-band" aria-label="Collection outputs">
+          <div class="section-heading">
+            <span>Collection Preview</span>
+            <span id="collectionCount">1 generated output</span>
+          </div>
+          <div id="collectionGrid" class="collection-grid"></div>
+        </section>
+
+        <section class="metadata-band" aria-label="Metadata preview">
+          <div class="section-heading">
+            <span>Chain-Optimized Metadata</span>
+            <span id="metadataStandard">Ordinals inscription note</span>
+          </div>
+          <pre id="metadataPreview"></pre>
+        </section>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
